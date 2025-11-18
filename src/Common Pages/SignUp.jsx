@@ -28,7 +28,6 @@ const SignUp = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200 flex flex-col">
 
-            {/* Header */}
             <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-3">
                 <img
                     src={cafeLogo}
@@ -38,27 +37,23 @@ const SignUp = () => {
                 <span className="text-2xl md:text-3xl font-bold text-amber-700">Iman Café</span>
             </div>
 
-            {/* Main Sign Up Card */}
             <div className="flex justify-center flex-1 px-4">
                 <div className="max-w-screen-lg w-full flex flex-col md:flex-row rounded-xl overflow-hidden shadow-xl">
 
-                    {/* Left Side: Image */}
                     <div className="w-full md:w-1/2 relative h-64 md:h-auto">
                         <img
-                            src={cafeLogo} // Replace with meal image if available
+                            src={cafeLogo} 
                             alt="Delicious Meal"
                             className="w-full h-full object-cover"
                         />
                     </div>
 
-                    {/* Right Side: Form */}
                     <div className="w-full md:w-1/2 p-8 flex flex-col justify-center bg-white/90 shadow-lg rounded-xl">
                         <div className="text-center mb-6">
                             <h1 className="text-4xl font-bold text-amber-800">Iman Café</h1>
                             <p className="text-lg text-gray-600 mt-2">Join us and enjoy delicious meals!</p>
                         </div>
 
-                        {/* Sign Up Form */}
                         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                             <input
                                 type="text"
@@ -98,7 +93,6 @@ const SignUp = () => {
                             </button>
                         </form>
 
-                        {/* Footer Section */}
                         <div className="mt-6 text-center text-sm text-gray-600">
                             <p>
                                 Already have an account?{" "}

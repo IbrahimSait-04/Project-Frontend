@@ -22,7 +22,6 @@ const Login = () => {
 
       console.log(" Logged In:", data);
 
-      //  Clear old data
       localStorage.removeItem("staffData");
       localStorage.removeItem("adminData");
       localStorage.removeItem("customerData");
@@ -31,7 +30,6 @@ const Login = () => {
       localStorage.removeItem("staffToken");
       localStorage.removeItem("adminToken");
 
-      // Save according to role
       if (role === "staff") {
         localStorage.setItem("staffToken", data.token);
         localStorage.setItem("staffData", JSON.stringify(data.staff));
@@ -46,7 +44,6 @@ const Login = () => {
         return navigate("/admin");
       }
 
-      //  Customer default
       localStorage.setItem("customerToken", data.token);
       localStorage.setItem("customerData", JSON.stringify(data.customer));
       localStorage.setItem("customerId", data.customer.id);

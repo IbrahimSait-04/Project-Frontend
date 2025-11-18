@@ -23,7 +23,7 @@ const Checkout = () => {
     image
       ? image.startsWith("http")
         ? image
-        : `http://localhost:5000${image.startsWith("/uploads") ? image : "/uploads/" + image}`
+        : `https://project-backend-qqbo.onrender.com${image.startsWith("/uploads") ? image : "/uploads/" + image}`
       : "";
 
   const handlePayment = async () => {

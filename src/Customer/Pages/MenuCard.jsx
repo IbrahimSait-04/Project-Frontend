@@ -11,7 +11,7 @@ const MenuCard = ({ image, title, price, description, onAddToCart, isLoggedIn })
   const imageUrl = image
     ? image.startsWith("http")
       ? image
-      : `http://localhost:5000${image.startsWith("/uploads") ? image : "/uploads/" + image}`
+      : `https://project-backend-qqbo.onrender.com${image.startsWith("/uploads") ? image : "/uploads/" + image}`
     : "https://via.placeholder.com/300x200?text=No+Image";
 
   return (

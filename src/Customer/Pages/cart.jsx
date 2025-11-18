@@ -24,7 +24,7 @@ const Cart = () => {
     image
       ? image.startsWith("http")
         ? image
-        : `http://localhost:5000${
+        : `https://project-backend-qqbo.onrender.com${
             image.startsWith("/uploads") ? image : "/uploads/" + image
           }`
       : "";

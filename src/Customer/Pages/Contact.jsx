@@ -38,7 +38,6 @@ const Contact = () => {
 
     alert(" Thanks! Your message was submitted (check console).");
 
-    // Reset
     setForm({ name: "", email: "", description: "" });
     setFile(null);
     setFileName("");
@@ -46,10 +45,8 @@ const Contact = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200">
-      {/* Navbar at top */}
       <Navbar />
 
-      {/* Contact form section */}
       <div className="flex flex-1 justify-center items-center p-6">
         <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg">
           <h2 className="text-3xl font-bold text-center mb-6">Contact Us</h2>
