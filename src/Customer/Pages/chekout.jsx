@@ -27,8 +27,16 @@ const Checkout = () => {
       : "";
 
   const handlePayment = async () => {
-    const token = localStorage.getItem("customerToken");
-    const userId = localStorage.getItem("customerId");
+    const token =
+      localStorage.getItem("customerToken") ||
+      localStorage.getItem("staffToken") ||
+      localStorage.getItem("adminToken");
+
+    const userId =
+      localStorage.getItem("customerId") ||
+      localStorage.getItem("staffId") ||
+      localStorage.getItem("adminId");
+
 
     if (!token || !userId) {
       toast.error("You must be logged in to proceed.");
@@ -50,22 +58,19 @@ const Checkout = () => {
       setLoading(true);
 
       if (paymentMethod === "cash") {
-        // 🧾 Cash on Delivery / Pickup
-        console.log("🟡 Creating cash order...");
+        console.log(" Creating cash order...");
 
         const { data } = await api.post(
           "/orders",
           {
-            userId,
             items: orderItems,
             totalAmount: totalPrice,
             type: orderType,
             method: "cash",
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
+          }
         );
 
-        console.log("✅ Order placed successfully:", data.order);
+        console.log(" Order placed successfully:", data.order);
         toast.success("Order placed successfully!");
         dispatch(clearCart());
         localStorage.removeItem("checkoutOrderType");
@@ -74,13 +79,13 @@ const Checkout = () => {
         navigate("/menu");
       } else {
         // 💳 Razorpay Online Payment
-        console.log("🟣 Initializing Razorpay...");
+        console.log(" Initializing Razorpay...");
 
-        const { data } = await api.post(
-          "/payment",
-          { totalAmount: totalPrice, method: "online" },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const { data } = await api.post("/payment", {
+          totalAmount: totalPrice,
+          method: "online",
+        });
+
 
         const options = {
           key: data.key,
@@ -90,7 +95,7 @@ const Checkout = () => {
           description: "Order Payment",
           order_id: data.orderId,
           handler: async (response) => {
-            console.log("🟢 Payment successful, verifying...");
+            console.log(" Payment successful, verifying...");
 
             try {
               const verifyRes = await api.post(
@@ -116,7 +121,7 @@ const Checkout = () => {
               setPaymentMethod("online");
               navigate("/menu");
             } catch (err) {
-              console.error("❌ Payment verification failed:", err);
+              console.error(" Payment verification failed:", err);
               toast.error("Payment verification failed. Please contact support.");
             }
           },
@@ -131,12 +136,12 @@ const Checkout = () => {
         rzp.open();
 
         rzp.on("payment.failed", (response) => {
-          console.error("❌ Razorpay Payment Failed:", response.error);
+          console.error(" Razorpay Payment Failed:", response.error);
           toast.error("Payment failed. Please try again.");
         });
       }
     } catch (err) {
-      console.error("❌ Error processing payment/order:", err);
+      console.error(" Error processing payment/order:", err);
       toast.error(err.response?.data?.message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
@@ -152,7 +157,7 @@ const Checkout = () => {
             Checkout
           </h2>
 
-          {/* 🧺 Cart Items */}
+          {/*  Cart Items */}
           <div className="space-y-4">
             {cartItems.map((item) => (
               <div
@@ -177,7 +182,7 @@ const Checkout = () => {
             ))}
           </div>
 
-          {/* 💰 Total */}
+          {/*  Total */}
           <div className="mt-6 border-t border-gray-200 pt-4 flex justify-between items-center">
             <h3 className="text-xl font-bold text-gray-800">Total</h3>
             <h3 className="text-xl font-bold text-orange-700">
@@ -185,7 +190,7 @@ const Checkout = () => {
             </h3>
           </div>
 
-          {/* 💳 Payment Section */}
+          {/*  Payment Section */}
           <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center">
             <select
               value={paymentMethod}
@@ -199,15 +204,14 @@ const Checkout = () => {
             <button
               onClick={handlePayment}
               disabled={loading}
-              className={`w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-xl transition-all ${
-                loading ? "opacity-60 cursor-not-allowed" : ""
-              }`}
+              className={`w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-xl transition-all ${loading ? "opacity-60 cursor-not-allowed" : ""
+                }`}
             >
               {loading
                 ? "Processing..."
                 : paymentMethod === "cash"
-                ? "Place Order"
-                : "Pay Online"}
+                  ? "Place Order"
+                  : "Pay Online"}
             </button>
           </div>
         </div>

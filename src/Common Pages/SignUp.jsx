@@ -15,7 +15,7 @@ const SignUp = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        api.post("/api/customer", { name, email, phone, password })
+        api.post("/customer", { name, email, phone, password })
             .then(result => {
                 console.log("User Created : ", result.data);
                 navigate('/login');

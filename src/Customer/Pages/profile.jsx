@@ -56,8 +56,7 @@ const CustomerProfile = () => {
   const sections = [
     { title: "My Orders", description: "Track, return, or view past orders", icon: "📦", action: () => navigate("/myorders") },
     { title: "Reservations", description: "View and manage dine-in reservations", icon: "🍽️" , action: () => navigate("/customer/reservations")},
-    { title: "Payments", description: "Manage your saved payment methods", icon: "💳" },
-    { title: "Support", description: "Get help or contact customer service", icon: "🧰" },
+    { title: "Support", description: "Get help or contact customer service", icon: "🧰" , action: () => navigate("/contact") },
     {
       title: "Settings",
       description: "Update profile details and preferences",

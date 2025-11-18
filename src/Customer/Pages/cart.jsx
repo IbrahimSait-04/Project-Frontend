@@ -29,7 +29,7 @@ const Cart = () => {
           }`
       : "";
 
-  // Corrected increment/decrement handlers
+
   const handleIncrement = (item) => {
     dispatch(updateQuantity({ id: item.id, type: "inc" }));
   };
@@ -64,7 +64,7 @@ const Cart = () => {
             className="backdrop-blur-xl bg-white/70 rounded-3xl shadow-2xl p-8"
           >
             <h2 className="text-4xl font-extrabold text-center text-amber-800 mb-10">
-              🛒 Your Cart
+               Your Cart
             </h2>
 
             {cartItems.length === 0 ? (

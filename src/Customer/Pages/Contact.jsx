@@ -36,7 +36,7 @@ const Contact = () => {
       fileName,
     });
 
-    alert("✅ Thanks! Your message was submitted (check console).");
+    alert(" Thanks! Your message was submitted (check console).");
 
     // Reset
     setForm({ name: "", email: "", description: "" });

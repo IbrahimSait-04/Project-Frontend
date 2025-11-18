@@ -28,37 +28,37 @@ const DineInReservation = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const token = localStorage.getItem("customerToken");
-      if (!token) {
-        toast.error("Customer not logged in!");
-        return;
-      }
+  try {
+    const token = localStorage.getItem("customerToken");
 
-      const response = await api.post(
-        "/reservations",
-        {
-          date: formData.date,
-          time: formData.time,
-          partySize: formData.guests,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    if (!token) {
+      toast.error("Customer not logged in! Please log in.");
+      return;
+    }
 
-      console.log("✅ Reservation Success:", response.data);
-      toast.success("Reservation submitted successfully!");
-      setSuccess(true);
+   const response = await api.post(
+    "/reservations",
+    {
+     date: formData.date,
+     time: formData.time,
+     partySize: formData.guests,
+    },
+    {
+     headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+     },
+    }
+   );
 
-      // Reset form
-      setFormData({
+   console.log(" Reservation Success:", response.data);
+   toast.success("Reservation submitted successfully!");
+   setSuccess(true);
+
+   setFormData({
         date: "",
         time: "",
         guests: 1,
@@ -67,7 +67,7 @@ const DineInReservation = () => {
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error(
-        "❌ Reservation failed:",
+        " Reservation failed:",
         error.response?.data || error.message
       );
       toast.error(error.response?.data?.message || "Reservation failed");

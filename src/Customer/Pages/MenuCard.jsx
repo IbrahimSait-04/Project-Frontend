@@ -56,11 +56,11 @@ const Menu = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const dispatch = useDispatch();
 
-  const checkLogin = () => {
-    const token = localStorage.getItem("customerToken");
-    const data = localStorage.getItem("customerData");
-    setIsLoggedIn(!!token && !!data);
-  };
+const checkLogin = () => {
+  const token = localStorage.getItem("customerToken");
+  const data = localStorage.getItem("customerData");
+  setIsLoggedIn(!!token && !!data);
+};
 
   useEffect(() => {
     checkLogin();

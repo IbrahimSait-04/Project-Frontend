@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import api from "../services/api";
+import api from "../../services/api";
 
 const CreateMenuItem = () => {
   const [menuItem, setMenuItem] = useState({
@@ -30,7 +30,6 @@ const CreateMenuItem = () => {
       formData.append("category", menuItem.category);
       if (menuItem.image) formData.append("image", menuItem.image);
 
-      // Add token if required
       const token = localStorage.getItem("adminToken");
       const headers = {
         "Content-Type": "multipart/form-data",
