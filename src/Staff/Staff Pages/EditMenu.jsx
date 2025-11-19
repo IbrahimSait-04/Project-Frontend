@@ -3,7 +3,7 @@ import api from '../../services/api.js';
 import { toast } from 'react-toastify';
 import { Loader2, Edit3, Save, XCircle, X } from 'lucide-react';
 
-const BASE_SERVER_URL = 'http://localhost:5000';
+const BASE_SERVER_URL = 'https://project-backend-qqbo.onrender.com';
 
 const EditMenu = () => {
   const getAbsoluteImageUrl = (imagePath) => {
