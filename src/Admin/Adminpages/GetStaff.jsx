@@ -1,32 +1,48 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../services/api";          // ❗ use global api instance (fixes localhost issue)
 import { toast } from "react-toastify";
 
 const GetStaffs = () => {
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const adminToken = localStorage.getItem("adminToken");
 
   useEffect(() => {
     const fetchStaff = async () => {
-      if (!adminToken) {
-        toast.error("Admin not logged in!");
-        return;
-      }
       try {
-        const config = { headers: { Authorization: `Bearer ${adminToken}` } };
-        const { data } = await axios.get("http://localhost:5000/api/admin/staff", config);
-        setStaffList(data.staff || []);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to fetch staff list");
+        setLoading(true);
+        const token = localStorage.getItem("adminToken");
+
+        if (!token) {
+          toast.error("Admin not logged in");
+          setStaffList([]);
+          return;
+        }
+
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const res = await api.get("/admin/staff", config);
+
+        // Normalize all possible backend shapes
+        const raw = res.data;
+        const staff = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.staff)
+          ? raw.staff
+          : Array.isArray(raw?.staffs)
+          ? raw.staffs
+          : [];
+
+        setStaffList(staff);
+      } catch (err) {
+        console.error(err);
+        toast.error(err?.response?.data?.message || "Failed to fetch staff");
+        setStaffList([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchStaff();
-  }, [adminToken]);
+  }, []);
 
   if (loading) {
     return (
@@ -44,21 +60,20 @@ const GetStaffs = () => {
         </h2>
 
         {staffList.length === 0 ? (
-          <p className="text-gray-500 text-center italic">
-            No staff members found.
-          </p>
+          <p className="text-gray-500 text-center italic">No staff members found.</p>
         ) : (
           <div className="grid sm:grid-cols-2 gap-6">
             {staffList.map((staff) => (
               <div
-                key={staff._id}
+                key={staff._id || staff.id}
                 className="p-5 rounded-2xl border border-amber-100 bg-white hover:bg-amber-50 shadow-md transition-transform hover:scale-[1.02]"
               >
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-semibold text-lg text-gray-800">{staff.name}</p>
-                    <p className="text-gray-500 text-sm">{staff.email}</p>
+                    <p className="text-gray-500 text-sm">{staff.email || "-"}</p>
                   </div>
+
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
                       staff.role === "chef"
@@ -70,7 +85,7 @@ const GetStaffs = () => {
                         : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {staff.role}
+                    {staff.role || "employee"}
                   </span>
                 </div>
               </div>

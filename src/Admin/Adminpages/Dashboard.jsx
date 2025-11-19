@@ -26,14 +26,15 @@ const fmtDateTime = (d) => (d ? new Date(d).toLocaleString() : "N/A");
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-GB") : "N/A");
 const fmtCurrency = (n) => `₹${Number(n ?? 0).toFixed(2)}`;
 
-// next step pipeline for orders
+// Order status pipeline
 const nextOrderStatus = (st) => {
   const s = statusOf(st);
   if (s === "pending") return "accepted";
   if (s === "accepted") return "preparing";
-  if (s === "preparing") return "completed"; // "Completed" == handed to customer
+  if (s === "preparing") return "completed"; // completed = handed to customer
   return null;
 };
+
 const humanNextLabel = (st) => {
   const s = statusOf(st);
   if (s === "pending") return "Accept Order";
@@ -77,24 +78,26 @@ const Dashboard = () => {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const token = localStorage.getItem("adminToken");
-  const authHeader = { Authorization: `Bearer ${token}` };
-
-  // derived groups
+  // Derived groups
   const pendingReservations = useMemo(
     () => reservations.filter((r) => statusOf(r.status) === "pending"),
     [reservations]
   );
+
   const pendingOrders = useMemo(
     () => orders.filter((o) => statusOf(o.status) === "pending"),
     [orders]
   );
+
   const inProgressOrders = useMemo(
-    () => orders.filter((o) => ["accepted", "preparing"].includes(statusOf(o.status))),
+    () =>
+      orders.filter((o) =>
+        ["accepted", "preparing"].includes(statusOf(o.status))
+      ),
     [orders]
   );
 
-  // revenue (completed orders only)
+  // Revenue from completed orders only
   const { dailyRevenue, monthlyRevenue } = useMemo(() => {
     const now = new Date();
     const y = now.getFullYear();
@@ -109,44 +112,79 @@ const Dashboard = () => {
       const created = new Date(o.createdAt || o.updatedAt || Date.now());
       if (created.getFullYear() === y && created.getMonth() === m) {
         monthly += Number(o.totalAmount || 0);
-        if (created.getDate() === d) daily += Number(o.totalAmount || 0);
+        if (created.getDate() === d) {
+          daily += Number(o.totalAmount || 0);
+        }
       }
     });
 
     return { dailyRevenue: daily, monthlyRevenue: monthly };
   }, [orders]);
 
+  // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+          toast.error("Admin not logged in. Please login again.");
+          setReservations([]);
+          setOrders([]);
+          return;
+        }
+
+        const headers = { Authorization: `Bearer ${token}` };
+
         const [resvResp, ordResp] = await Promise.all([
-          api.get("/reservations", { headers: authHeader }),
-          api.get("/orders", { headers: authHeader }),
+          api.get("/reservations", { headers }),
+          api.get("/orders", { headers }),
         ]);
 
-        const resvData = resvResp.data?.reservations || resvResp.data || [];
-        const ordData = ordResp.data?.orders || ordResp.data || [];
+        const normalize = (raw, key) => {
+          if (Array.isArray(raw)) return raw;
+          if (Array.isArray(raw?.[key])) return raw[key];
+          return [];
+        };
+
+        const resvData = normalize(resvResp.data, "reservations");
+        const ordData = normalize(ordResp.data, "orders");
 
         setReservations(resvData);
         setOrders(ordData);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
         toast.error("Failed to load dashboard data.");
+        setReservations([]);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [token]);
+  }, []);
 
-  // status updates
+  /* ------------ Status update helpers (with token safety) ------------ */
+
   const setReservationStatus = async (id, status) => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      toast.error("Not authorized. Please login again.");
+      return;
+    }
     try {
-      await api.put(`/reservations/${id}/status`, { status }, { headers: authHeader });
-      setReservations((prev) => prev.map((r) => (r._id === id ? { ...r, status } : r)));
-      setSelectedReservation((prev) => (prev?._id === id ? { ...prev, status } : prev));
+      await api.put(
+        `/reservations/${id}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReservations((prev) =>
+        prev.map((r) => (r._id === id ? { ...r, status } : r))
+      );
+      setSelectedReservation((prev) =>
+        prev?._id === id ? { ...prev, status } : prev
+      );
       toast.success(`Reservation ${status}`);
     } catch (err) {
       console.error("updateReservationStatus:", err);
@@ -155,11 +193,24 @@ const Dashboard = () => {
   };
 
   const setOrderStatus = async (id, status) => {
+    const token = localStorage.getItem("adminToken");
+    if (!token) {
+      toast.error("Not authorized. Please login again.");
+      return;
+    }
     try {
-      const { data } = await api.put(`/orders/${id}/status`, { status }, { headers: authHeader });
+      const { data } = await api.put(
+        `/orders/${id}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const updated = data?.order;
-      setOrders((prev) => prev.map((o) => (o._id === id ? updated || { ...o, status } : o)));
-      setSelectedOrder((prev) => (prev?._id === id ? updated || { ...prev, status } : prev));
+      setOrders((prev) =>
+        prev.map((o) => (o._id === id ? updated || { ...o, status } : o))
+      );
+      setSelectedOrder((prev) =>
+        prev?._id === id ? updated || { ...prev, status } : prev
+      );
       toast.success(`Order marked as ${status}`);
     } catch (err) {
       console.error("updateOrderStatus:", err);
@@ -168,10 +219,13 @@ const Dashboard = () => {
   };
 
   const advanceOrder = (order) => {
-    const nxt = nextOrderStatus(order?.status);
+    if (!order) return;
+    const nxt = nextOrderStatus(order.status);
     if (!nxt) return;
     setOrderStatus(order._id, nxt);
   };
+
+  /* ------------------- Loading / Empty Guard ------------------- */
 
   if (loading) {
     return (
@@ -183,13 +237,14 @@ const Dashboard = () => {
     );
   }
 
-  // KPI stats
   const stats = {
     totalOrders: orders.length,
     pendingOrders: pendingOrders.length,
     totalReservations: reservations.length,
     pendingReservations: pendingReservations.length,
   };
+
+  /* --------------------------- UI --------------------------- */
 
   return (
     <div className="min-h-screen bg-amber-50 p-6">
@@ -237,7 +292,7 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Pending Sections with Actions */}
+      {/* Pending Sections */}
       <div className="grid md:grid-cols-2 gap-6 mb-10">
         {/* Pending Orders */}
         <div className="bg-white shadow-xl rounded-2xl border p-5 border-amber-200">
@@ -251,13 +306,20 @@ const Dashboard = () => {
             </p>
           ) : (
             pendingOrders.map((order) => (
-              <div key={order._id} className="border rounded-xl p-4 mb-4 bg-white">
-                <p className="font-bold text-amber-700">Order #{String(order._id).slice(-6)}</p>
-                <p>
-                  <Clock className="inline mr-1 size-4" /> {fmtDateTime(order.createdAt)}
+              <div
+                key={order._id || order.id}
+                className="border rounded-xl p-4 mb-4 bg-white"
+              >
+                <p className="font-bold text-amber-700">
+                  Order #{String(order._id || order.id || "").slice(-6)}
                 </p>
                 <p>
-                  <User className="inline mr-1 size-4" /> {order.user?.name || "Walk-in"}
+                  <Clock className="inline mr-1 size-4" />{" "}
+                  {fmtDateTime(order.createdAt)}
+                </p>
+                <p>
+                  <User className="inline mr-1 size-4" />{" "}
+                  {order.user?.name || "Walk-in"}
                 </p>
                 <p>
                   <b>Total:</b> {fmtCurrency(order.totalAmount)}
@@ -300,15 +362,20 @@ const Dashboard = () => {
             </p>
           ) : (
             pendingReservations.map((res) => (
-              <div key={res._id} className="border rounded-xl p-4 mb-4 bg-white">
+              <div
+                key={res._id || res.id}
+                className="border rounded-xl p-4 mb-4 bg-white"
+              >
                 <p className="font-bold text-green-700">
-                  Reservation #{String(res._id).slice(-6)}
+                  Reservation #{String(res._id || res.id || "").slice(-6)}
                 </p>
                 <p>
-                  <User className="inline mr-1 size-4" /> {res.user?.name || "Guest"}
+                  <User className="inline mr-1 size-4" />{" "}
+                  {res.user?.name || "Guest"}
                 </p>
                 <p>
-                  <Calendar className="inline mr-1 size-4" /> {fmtDate(res.date)}
+                  <Calendar className="inline mr-1 size-4" />{" "}
+                  {fmtDate(res.date)}
                 </p>
                 <p>
                   <Clock className="inline mr-1 size-4" /> {res.time}
@@ -340,21 +407,23 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* In-Progress Orders (step-by-step action button) */}
+      {/* In-Progress Orders */}
       {inProgressOrders.length > 0 && (
         <div className="bg-white shadow-xl rounded-2xl border p-5 border-amber-200 mb-10">
           <h2 className="text-xl font-bold text-amber-800 mb-3">
             🔧 In-Progress Orders ({inProgressOrders.length})
           </h2>
           {inProgressOrders.map((o) => (
-            <div key={o._id} className="border rounded-xl p-4 mb-4">
+            <div key={o._id || o.id} className="border rounded-xl p-4 mb-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-semibold text-amber-700">
-                    Order #{String(o._id).slice(-6)} — {o.user?.name || "Walk-in"}
+                    Order #{String(o._id || o.id || "").slice(-6)} —{" "}
+                    {o.user?.name || "Walk-in"}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Status: <b className="capitalize">{statusOf(o.status)}</b> • Total:{" "}
+                    Status:{" "}
+                    <b className="capitalize">{statusOf(o.status)}</b> • Total:{" "}
                     {fmtCurrency(o.totalAmount)}
                   </p>
                 </div>
@@ -380,7 +449,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* All Tables (no actions; click to open modal) */}
+      {/* All Tables (click rows for details) */}
       <div className="grid grid-cols-1 gap-8">
         <DataTableNoAction
           title="Dine-In Reservations (Click for Details)"
@@ -412,8 +481,12 @@ const Dashboard = () => {
         <ReservationDetailPopup
           data={selectedReservation}
           onClose={() => setSelectedReservation(null)}
-          onAccept={() => setReservationStatus(selectedReservation._id, "confirmed")}
-          onCancel={() => setReservationStatus(selectedReservation._id, "cancelled")}
+          onAccept={() =>
+            setReservationStatus(selectedReservation._id, "confirmed")
+          }
+          onCancel={() =>
+            setReservationStatus(selectedReservation._id, "cancelled")
+          }
         />
       )}
     </div>
@@ -454,7 +527,7 @@ const DataTableNoAction = ({ title, data, columns, isOrder, onRowClick }) => (
         ) : (
           data.map((item, idx) => (
             <motion.tr
-              key={item._id}
+              key={item._id || item.id || idx}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
@@ -466,7 +539,9 @@ const DataTableNoAction = ({ title, data, columns, isOrder, onRowClick }) => (
                   <td className="py-3 px-4 text-left font-semibold">
                     {item?.user?.name || "N/A"}
                   </td>
-                  <td className="py-3 px-4">{fmtCurrency(item?.totalAmount)}</td>
+                  <td className="py-3 px-4">
+                    {fmtCurrency(item?.totalAmount)}
+                  </td>
                   <td className="py-3 px-4">{item?.type || "N/A"}</td>
                   <td className="py-3 px-4">{item?.method || "N/A"}</td>
                 </>
@@ -477,7 +552,9 @@ const DataTableNoAction = ({ title, data, columns, isOrder, onRowClick }) => (
                   </td>
                   <td className="py-3 px-4">{fmtDate(item?.date)}</td>
                   <td className="py-3 px-4">{item?.time || "N/A"}</td>
-                  <td className="py-3 px-4">{item?.guests ?? "N/A"}</td>
+                  <td className="py-3 px-4">
+                    {item?.guests ?? item?.partySize ?? "N/A"}
+                  </td>
                 </>
               )}
               <td
@@ -509,26 +586,70 @@ const ReservationDetailPopup = ({ data, onClose, onAccept, onCancel }) => (
     >
       <div className="flex justify-between items-center mb-4 border-b pb-3">
         <h2 className="text-xl font-bold text-green-700 flex items-center gap-2">
-          <Calendar /> Reservation #{String(data?._id).slice(-6)}
+          <Calendar /> Reservation #{String(data?._id || "").slice(-6)}
         </h2>
-        <button onClick={onClose} className="text-red-600 font-semibold">✕ Close</button>
+        <button onClick={onClose} className="text-red-600 font-semibold">
+          ✕ Close
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-        <DetailRow icon={<User />} label="Customer" value={data?.user?.name || "Guest"} />
-        <DetailRow icon={<Mail />} label="Email" value={data?.user?.email || "N/A"} />
-        <DetailRow icon={<Phone />} label="Phone" value={data?.user?.phone || "N/A"} />
-        <DetailRow icon={<Utensils />} label="Status" value={data?.status || "N/A"} />
-        <DetailRow icon={<Calendar />} label="Date" value={fmtDate(data?.date)} />
-        <DetailRow icon={<Clock />} label="Time" value={data?.time || "N/A"} />
-        <DetailRow icon={<Users />} label="Guests" value={data?.guests ?? "N/A"} />
-        <DetailRow icon={<ClipboardList />} label="Special Request" value={data?.notes || "None"} />
+        <DetailRow
+          icon={<User />}
+          label="Customer"
+          value={data?.user?.name || "Guest"}
+        />
+        <DetailRow
+          icon={<Mail />}
+          label="Email"
+          value={data?.user?.email || "N/A"}
+        />
+        <DetailRow
+          icon={<Phone />}
+          label="Phone"
+          value={data?.user?.phone || "N/A"}
+        />
+        <DetailRow
+          icon={<Utensils />}
+          label="Status"
+          value={data?.status || "N/A"}
+        />
+        <DetailRow
+          icon={<Calendar />}
+          label="Date"
+          value={fmtDate(data?.date)}
+        />
+        <DetailRow
+          icon={<Clock />}
+          label="Time"
+          value={data?.time || "N/A"}
+        />
+        <DetailRow
+          icon={<Users />}
+          label="Guests"
+          value={data?.guests ?? data?.partySize ?? "N/A"}
+        />
+        <DetailRow
+          icon={<ClipboardList />}
+          label="Special Request"
+          value={data?.notes || "None"}
+        />
       </div>
 
       {statusOf(data?.status) === "pending" && (
         <div className="flex gap-3 mt-6">
-          <button onClick={onAccept} className="bg-green-600 text-white px-3 py-2 rounded-xl text-sm">Accept</button>
-          <button onClick={onCancel} className="bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm">Cancel</button>
+          <button
+            onClick={onAccept}
+            className="bg-green-600 text-white px-3 py-2 rounded-xl text-sm"
+          >
+            Accept
+          </button>
+          <button
+            onClick={onCancel}
+            className="bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm"
+          >
+            Cancel
+          </button>
         </div>
       )}
     </motion.div>
@@ -555,24 +676,50 @@ const OrderDetailPopup = ({ data, onClose, onAdvance, onCancel }) => {
       >
         <div className="flex justify-between items-center mb-4 border-b pb-3">
           <h2 className="text-xl font-bold text-amber-800 flex items-center gap-2">
-            <ShoppingBag /> Order #{String(data?._id).slice(-6)}
+            <ShoppingBag /> Order #{String(data?._id || "").slice(-6)}
           </h2>
-          <button onClick={onClose} className="text-red-600 font-semibold">✕ Close</button>
+          <button onClick={onClose} className="text-red-600 font-semibold">
+            ✕ Close
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-          <DetailRow icon={<User />} label="Customer" value={data?.user?.name || "Walk-in"} />
-          <DetailRow icon={<Mail />} label="Email" value={data?.user?.email || "N/A"} />
-          <DetailRow icon={<Phone />} label="Phone" value={data?.user?.phone || "N/A"} />
-          <DetailRow icon={<Utensils />} label="Status" value={data?.status || "N/A"} />
-          <DetailRow icon={<DollarSign />} label="Total Amount" value={fmtCurrency(data?.totalAmount)} />
-          <DetailRow icon={<ShoppingBag />} label="Order Type" value={data?.type || "N/A"} />
-
-          {/* NEW: show exact order date/time */}
+          <DetailRow
+            icon={<User />}
+            label="Customer"
+            value={data?.user?.name || "Walk-in"}
+          />
+          <DetailRow
+            icon={<Mail />}
+            label="Email"
+            value={data?.user?.email || "N/A"}
+          />
+          <DetailRow
+            icon={<Phone />}
+            label="Phone"
+            value={data?.user?.phone || "N/A"}
+          />
+          <DetailRow
+            icon={<Utensils />}
+            label="Status"
+            value={data?.status || "N/A"}
+          />
+          <DetailRow
+            icon={<DollarSign />}
+            label="Total Amount"
+            value={fmtCurrency(data?.totalAmount)}
+          />
+          <DetailRow
+            icon={<ShoppingBag />}
+            label="Order Type"
+            value={data?.type || "N/A"}
+          />
           <DetailRow
             icon={<Calendar />}
             label="Ordered At"
-            value={fmtDateTime(data?.createdAt || data?.updatedAt || data?.orderAt)}
+            value={fmtDateTime(
+              data?.createdAt || data?.updatedAt || data?.orderAt
+            )}
           />
         </div>
 
@@ -584,11 +731,12 @@ const OrderDetailPopup = ({ data, onClose, onAdvance, onCancel }) => {
             <ul className="space-y-1 max-h-48 overflow-y-auto pr-1">
               {items.map((it, i) => (
                 <li
-                  key={i}
+                  key={`${it.name}-${i}`}
                   className="flex justify-between text-sm py-1 border-b border-yellow-100 last:border-b-0"
                 >
                   <span className="font-medium text-gray-800">
-                    {it.name} <span className="text-gray-500">x{it.quantity}</span>
+                    {it.name}{" "}
+                    <span className="text-gray-500">x{it.quantity}</span>
                   </span>
                   <span className="font-semibold text-amber-700">
                     {fmtCurrency((it.price ?? 0) * (it.quantity ?? 1))}

@@ -19,6 +19,12 @@ const EditMenu = () => {
     return `${BASE_SERVER_URL}${normalizedPath}`;
   };
 
+  const formatPrice = (price) => {
+    const num = Number(price);
+    if (Number.isNaN(num)) return 'N/A';
+    return num.toFixed(2);
+  };
+
   const [menuItems, setMenuItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
 
@@ -40,7 +46,8 @@ const EditMenu = () => {
     setListError(null);
     try {
       const response = await api.get('/menu');
-      setMenuItems(response.data || []);
+      const items = response.data || [];
+      setMenuItems(items);
     } catch (err) {
       console.error('Error fetching menu items:', err);
       setListError('Failed to load menu list. Check the API server.');
@@ -64,13 +71,17 @@ const EditMenu = () => {
 
     setEditingItem(itemToEdit);
     setFormData({
-      name: itemToEdit.name,
-      description: itemToEdit.description,
-      price: itemToEdit.price.toString(),
-      category: itemToEdit.category,
+      name: itemToEdit.name || '',
+      description: itemToEdit.description || '',
+      price:
+        itemToEdit.price !== undefined && itemToEdit.price !== null
+          ? String(itemToEdit.price)
+          : '',
+      category: itemToEdit.category || '',
     });
-    setImageUrl(itemToEdit.image);
+    setImageUrl(itemToEdit.image || '');
     setImageFile(null);
+
     setTimeout(() => {
       const el = document.getElementById('edit-form-panel');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -93,7 +104,7 @@ const EditMenu = () => {
   };
 
   const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
+    setImageFile(e.target.files[0] || null);
   };
 
   const handleSubmit = async (e) => {
@@ -113,7 +124,7 @@ const EditMenu = () => {
     }
 
     try {
-      const response = await api.put(`/menu/${editingItem._id}`, data, {
+      await api.put(`/menu/${editingItem._id}`, data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -121,11 +132,7 @@ const EditMenu = () => {
 
       toast.success('Menu item updated successfully! 🎉');
 
-      setMenuItems((prevItems) =>
-        prevItems.map((item) =>
-          item._id === editingItem._id ? response.data : item
-        )
-      );
+      await fetchItems();
       handleCancelEdit();
     } catch (err) {
       console.error('Error updating menu item:', err);
@@ -175,9 +182,9 @@ const EditMenu = () => {
           </p>
         ) : (
           <div className="space-y-3 md:space-y-4">
-            {menuItems.map((item) => (
+            {menuItems.map((item, index) => (
               <div
-                key={item._id}
+                key={item._id || index} 
                 className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg transition duration-200 ${
                   editingItem && editingItem._id === item._id
                     ? 'bg-orange-100 shadow-xl border-2 border-orange-500'
@@ -199,7 +206,7 @@ const EditMenu = () => {
                       {item.name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {item.category} | ₹{item.price.toFixed(2)}
+                      {item.category} | ₹{formatPrice(item.price)}
                     </p>
                   </div>
                 </div>
@@ -219,10 +226,7 @@ const EditMenu = () => {
       </div>
 
       {/* Edit panel */}
-      <div
-        id="edit-form-panel"
-        className="lg:col-span-1 lg:sticky lg:top-6"
-      >
+      <div id="edit-form-panel" className="lg:col-span-1 lg:sticky lg:top-6">
         {editingItem ? (
           <div className="bg-white shadow-2xl rounded-xl p-4 md:p-6 border-t-4 border-green-500">
             <div className="flex justify-between items-center mb-4 border-b pb-3">
@@ -362,8 +366,8 @@ const EditMenu = () => {
               Select an Item
             </h2>
             <p className="text-sm text-gray-500 mt-2">
-              Tap the Edit button next to any menu item to load its details
-              here for updating.
+              Tap the Edit button next to any menu item to load its details here
+              for updating.
             </p>
           </div>
         )}
