@@ -31,7 +31,6 @@ import StaffProfile from '../Staff/Staff Pages/staffProfile'
 import StaffDashboard from '../Staff/Staff Pages/staffDashboard'
 import CustomerOrders from '../Customer/Pages/order'
 import EditMenuItem from '../Admin/Adminpages/EditMenu'
-import StaffSettings from '../Staff/Staff Pages/StaffSettings'
 import EditMenu from '../Staff/Staff Pages/EditMenu'
 
 
@@ -63,7 +62,6 @@ const MainRouter = () => {
                                         {/* child routes */}
                                         <Route path="profile" element={<StaffProfile />} />
                                         <Route path="editmenu" element={<EditMenu />} />
-                                        <Route path="settings" element={<StaffSettings />} />
 
                                         <Route path="*" element={<StaffDashboard />} />
                                 </Route>
