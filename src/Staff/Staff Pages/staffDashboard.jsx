@@ -19,7 +19,6 @@ import {
   ShoppingCart,
 } from "lucide-react";
 
-/*  Utils  */
 const statusOf = (val) => String(val || "").toLowerCase();
 const fmtDateTime = (d) => (d ? new Date(d).toLocaleString() : "N/A");
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-GB") : "N/A");
@@ -29,7 +28,7 @@ const nextOrderStatus = (st) => {
   const s = statusOf(st);
   if (s === "pending") return "accepted";
   if (s === "accepted") return "preparing";
-  if (s === "preparing") return "completed"; 
+  if (s === "preparing") return "completed";
   return null;
 };
 const humanNextLabel = (st) => {
@@ -40,16 +39,19 @@ const humanNextLabel = (st) => {
   return null;
 };
 
-/*  Reusable UI bits  */
 const DashboardCard = ({ icon, title, count, borderColor }) => (
   <motion.div
     whileHover={{ scale: 1.03 }}
-    className={`p-6 rounded-2xl shadow-md bg-white border-l-4 ${borderColor}`}
+    className={`p-4 md:p-6 rounded-2xl shadow-md bg-white border-l-4 ${borderColor}`}
   >
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-3">
       <div>
-        <h2 className="text-lg font-semibold text-gray-700">{title}</h2>
-        <p className="text-3xl font-bold text-yellow-700">{count}</p>
+        <h2 className="text-sm md:text-lg font-semibold text-gray-700">
+          {title}
+        </h2>
+        <p className="text-2xl md:text-3xl font-bold text-yellow-700">
+          {count}
+        </p>
       </div>
       {icon}
     </div>
@@ -60,8 +62,10 @@ const DetailRow = ({ icon, label, value }) => (
   <div className="flex items-center gap-3 bg-yellow-50 rounded-lg p-3 shadow-sm">
     {React.cloneElement(icon, { className: "w-5 h-5 text-amber-700" })}
     <div>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-base font-medium text-gray-800">{value}</p>
+      <p className="text-xs md:text-sm text-gray-500">{label}</p>
+      <p className="text-sm md:text-base font-medium text-gray-800">
+        {value}
+      </p>
     </div>
   </div>
 );
@@ -87,7 +91,10 @@ const StaffDashboard = () => {
     [orders]
   );
   const inProgressOrders = useMemo(
-    () => orders.filter((o) => ["accepted", "preparing"].includes(statusOf(o.status))),
+    () =>
+      orders.filter((o) =>
+        ["accepted", "preparing"].includes(statusOf(o.status))
+      ),
     [orders]
   );
 
@@ -139,9 +146,17 @@ const StaffDashboard = () => {
 
   const setReservationStatus = async (id, status) => {
     try {
-      await api.put(`/reservations/${id}/status`, { status }, { headers: authHeader });
-      setReservations((prev) => prev.map((r) => (r._id === id ? { ...r, status } : r)));
-      setSelectedReservation((prev) => (prev?._id === id ? { ...prev, status } : prev));
+      await api.put(
+        `/reservations/${id}/status`,
+        { status },
+        { headers: authHeader }
+      );
+      setReservations((prev) =>
+        prev.map((r) => (r._id === id ? { ...r, status } : r))
+      );
+      setSelectedReservation((prev) =>
+        prev?._id === id ? { ...prev, status } : prev
+      );
       toast.success(`Reservation ${status}`);
     } catch (err) {
       console.error("updateReservationStatus:", err);
@@ -151,10 +166,18 @@ const StaffDashboard = () => {
 
   const setOrderStatus = async (id, status) => {
     try {
-      const { data } = await api.put(`/orders/${id}/status`, { status }, { headers: authHeader });
+      const { data } = await api.put(
+        `/orders/${id}/status`,
+        { status },
+        { headers: authHeader }
+      );
       const updated = data?.order;
-      setOrders((prev) => prev.map((o) => (o._id === id ? updated || { ...o, status } : o)));
-      setSelectedOrder((prev) => (prev?._id === id ? updated || { ...prev, status } : prev));
+      setOrders((prev) =>
+        prev.map((o) => (o._id === id ? updated || { ...o, status } : o))
+      );
+      setSelectedOrder((prev) =>
+        prev?._id === id ? updated || { ...prev, status } : prev
+      );
       toast.success(`Order marked as ${status}`);
     } catch (err) {
       console.error("updateOrderStatus:", err);
@@ -185,206 +208,227 @@ const StaffDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50 p-6">
-      <h1 className="text-3xl font-bold text-amber-800 mb-6 flex items-center gap-2">
-        <LayoutDashboard size={28} /> Staff Dashboard
-      </h1>
-      <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-        <DashboardCard
-          icon={<ShoppingCart className="text-yellow-600 w-10 h-10" />}
-          title="Total Orders"
-          count={stats.totalOrders}
-          borderColor="border-yellow-600"
-        />
-        <DashboardCard
-          icon={<Calendar className="text-green-600 w-10 h-10" />}
-          title="Total Reservations"
-          count={stats.totalReservations}
-          borderColor="border-green-500"
-        />
-        <DashboardCard
-          icon={<Clock className="text-yellow-600 w-10 h-10" />}
-          title="Pending Orders"
-          count={stats.pendingOrders}
-          borderColor="border-yellow-400"
-        />
-        <DashboardCard
-          icon={<Clock className="text-red-600 w-10 h-10" />}
-          title="Pending Reservations"
-          count={stats.pendingReservations}
-          borderColor="border-red-500"
-        />
-        <DashboardCard
-          icon={<DollarSign className="text-emerald-600 w-10 h-10" />}
-          title="Revenue (Today)"
-          count={fmtCurrency(dailyRevenue)}
-          borderColor="border-emerald-500"
-        />
-        <DashboardCard
-          icon={<DollarSign className="text-indigo-600 w-10 h-10" />}
-          title="Revenue (Month)"
-          count={fmtCurrency(monthlyRevenue)}
-          borderColor="border-indigo-500"
-        />
-      </div>
+    <div className="min-h-screen bg-amber-50 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl md:text-3xl font-bold text-amber-800 mb-4 md:mb-6 flex items-center gap-2">
+          <LayoutDashboard size={28} /> Staff Dashboard
+        </h1>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-10">
-        <div className="bg-white shadow-xl rounded-2xl border p-5 border-amber-200">
-          <h2 className="text-xl font-bold text-amber-800 mb-3">
-            🍽 Pending Orders ({stats.pendingOrders})
-          </h2>
-
-          {!pendingOrders.length ? (
-            <p className="text-gray-600 bg-green-100 text-center p-3 rounded-lg">
-              No pending orders
-            </p>
-          ) : (
-            pendingOrders.map((order) => (
-              <div key={order._id} className="border rounded-xl p-4 mb-4 bg-white">
-                <p className="font-bold text-amber-700">Order #{String(order._id).slice(-6)}</p>
-                <p>
-                  <Clock className="inline mr-1 size-4" /> {fmtDateTime(order.createdAt)}
-                </p>
-                <p>
-                  <User className="inline mr-1 size-4" /> {order.user?.name || "Walk-in"}
-                </p>
-                <p>
-                  <b>Total:</b> {fmtCurrency(order.totalAmount)}
-                </p>
-
-                <div className="flex gap-3 mt-3">
-                  <button
-                    onClick={() => setOrderStatus(order._id, "accepted")}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-xl text-sm"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => setOrderStatus(order._id, "cancelled")}
-                    className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded-xl text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setSelectedOrder(order)}
-                    className="bg-amber-50 border border-amber-200 px-3 py-1 rounded-xl text-amber-700 text-sm"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 md:gap-6 mb-8">
+          <DashboardCard
+            icon={<ShoppingCart className="text-yellow-600 w-8 h-8 md:w-10 md:h-10" />}
+            title="Total Orders"
+            count={stats.totalOrders}
+            borderColor="border-yellow-600"
+          />
+          <DashboardCard
+            icon={<Calendar className="text-green-600 w-8 h-8 md:w-10 md:h-10" />}
+            title="Total Reservations"
+            count={stats.totalReservations}
+            borderColor="border-green-500"
+          />
+          <DashboardCard
+            icon={<Clock className="text-yellow-600 w-8 h-8 md:w-10 md:h-10" />}
+            title="Pending Orders"
+            count={stats.pendingOrders}
+            borderColor="border-yellow-400"
+          />
+          <DashboardCard
+            icon={<Clock className="text-red-600 w-8 h-8 md:w-10 md:h-10" />}
+            title="Pending Reservations"
+            count={stats.pendingReservations}
+            borderColor="border-red-500"
+          />
+          <DashboardCard
+            icon={<DollarSign className="text-emerald-600 w-8 h-8 md:w-10 md:h-10" />}
+            title="Revenue (Today)"
+            count={fmtCurrency(dailyRevenue)}
+            borderColor="border-emerald-500"
+          />
+          <DashboardCard
+            icon={<DollarSign className="text-indigo-600 w-8 h-8 md:w-10 md:h-10" />}
+            title="Revenue (Month)"
+            count={fmtCurrency(monthlyRevenue)}
+            borderColor="border-indigo-500"
+          />
         </div>
 
-        <div className="bg-white shadow-xl rounded-2xl border p-5 border-green-200">
-          <h2 className="text-xl font-bold text-green-700 mb-3">
-            📅 Pending Reservations ({stats.pendingReservations})
-          </h2>
+        {/* Pending sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          <div className="bg-white shadow-xl rounded-2xl border p-4 md:p-5 border-amber-200">
+            <h2 className="text-lg md:text-xl font-bold text-amber-800 mb-3">
+              🍽 Pending Orders ({stats.pendingOrders})
+            </h2>
 
-          {!pendingReservations.length ? (
-            <p className="text-gray-600 bg-green-100 text-center p-3 rounded-lg">
-              No pending reservations
-            </p>
-          ) : (
-            pendingReservations.map((res) => (
-              <div key={res._id} className="border rounded-xl p-4 mb-4 bg-white">
-                <p className="font-bold text-green-700">
-                  Reservation #{String(res._id).slice(-6)}
-                </p>
-                <p>
-                  <User className="inline mr-1 size-4" /> {res.user?.name || "Guest"}
-                </p>
-                <p>
-                  <Calendar className="inline mr-1 size-4" /> {fmtDate(res.date)}
-                </p>
-                <p>
-                  <Clock className="inline mr-1 size-4" /> {res.time}
-                </p>
-
-                <div className="flex gap-3 mt-3">
-                  <button
-                    onClick={() => setReservationStatus(res._id, "confirmed")}
-                    className="bg-green-600 text-white px-3 py-1 rounded-xl text-sm"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => setReservationStatus(res._id, "cancelled")}
-                    className="bg-red-100 text-red-600 px-3 py-1 rounded-xl text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => setSelectedReservation(res)}
-                    className="border px-3 py-1 rounded-xl text-green-700 text-sm"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {inProgressOrders.length > 0 && (
-        <div className="bg-white shadow-xl rounded-2xl border p-5 border-amber-200 mb-10">
-          <h2 className="text-xl font-bold text-amber-800 mb-3">
-            🔧 In-Progress Orders ({inProgressOrders.length})
-          </h2>
-          {inProgressOrders.map((o) => (
-            <div key={o._id} className="border rounded-xl p-4 mb-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-amber-700">
-                    Order #{String(o._id).slice(-6)} — {o.user?.name || "Walk-in"}
+            {!pendingOrders.length ? (
+              <p className="text-gray-600 bg-green-100 text-center p-3 rounded-lg text-sm md:text-base">
+                No pending orders
+              </p>
+            ) : (
+              pendingOrders.map((order) => (
+                <div
+                  key={order._id}
+                  className="border rounded-xl p-4 mb-4 bg-white"
+                >
+                  <p className="font-bold text-amber-700 text-sm md:text-base">
+                    Order #{String(order._id).slice(-6)}
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Status: <b className="capitalize">{statusOf(o.status)}</b> • Total:{" "}
-                    {fmtCurrency(o.totalAmount)}
+                  <p className="text-xs md:text-sm">
+                    <Clock className="inline mr-1 size-4" />{" "}
+                    {fmtDateTime(order.createdAt)}
                   </p>
-                </div>
-                <div className="flex gap-2">
-                  {nextOrderStatus(o.status) && (
+                  <p className="text-xs md:text-sm">
+                    <User className="inline mr-1 size-4" />{" "}
+                    {order.user?.name || "Walk-in"}
+                  </p>
+                  <p className="text-xs md:text-sm">
+                    <b>Total:</b> {fmtCurrency(order.totalAmount)}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
                     <button
-                      onClick={() => advanceOrder(o)}
-                      className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-xl text-sm"
+                      onClick={() => setOrderStatus(order._id, "accepted")}
+                      className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-xl text-xs md:text-sm"
                     >
-                      {humanNextLabel(o.status)}
+                      Accept
                     </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedOrder(o)}
-                    className="border border-amber-200 text-amber-700 px-3 py-1 rounded-xl text-sm"
-                  >
-                    View
-                  </button>
+                    <button
+                      onClick={() => setOrderStatus(order._id, "cancelled")}
+                      className="w-full sm:w-auto bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1 rounded-xl text-xs md:text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="w-full sm:w-auto bg-amber-50 border border-amber-200 px-3 py-1 rounded-xl text-amber-700 text-xs md:text-sm"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="bg-white shadow-xl rounded-2xl border p-4 md:p-5 border-green-200">
+            <h2 className="text-lg md:text-xl font-bold text-green-700 mb-3">
+              📅 Pending Reservations ({stats.pendingReservations})
+            </h2>
+
+            {!pendingReservations.length ? (
+              <p className="text-gray-600 bg-green-100 text-center p-3 rounded-lg text-sm md:text-base">
+                No pending reservations
+              </p>
+            ) : (
+              pendingReservations.map((res) => (
+                <div
+                  key={res._id}
+                  className="border rounded-xl p-4 mb-4 bg-white"
+                >
+                  <p className="font-bold text-green-700 text-sm md:text-base">
+                    Reservation #{String(res._id).slice(-6)}
+                  </p>
+                  <p className="text-xs md:text-sm">
+                    <User className="inline mr-1 size-4" />{" "}
+                    {res.user?.name || "Guest"}
+                  </p>
+                  <p className="text-xs md:text-sm">
+                    <Calendar className="inline mr-1 size-4" />{" "}
+                    {fmtDate(res.date)}
+                  </p>
+                  <p className="text-xs md:text-sm">
+                    <Clock className="inline mr-1 size-4" /> {res.time}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                    <button
+                      onClick={() => setReservationStatus(res._id, "confirmed")}
+                      className="w-full sm:w-auto bg-green-600 text-white px-3 py-1 rounded-xl text-xs md:text-sm"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => setReservationStatus(res._id, "cancelled")}
+                      className="w-full sm:w-auto bg-red-100 text-red-600 px-3 py-1 rounded-xl text-xs md:text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => setSelectedReservation(res)}
+                      className="w-full sm:w-auto border px-3 py-1 rounded-xl text-green-700 text-xs md:text-sm"
+                    >
+                      View
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* In-progress orders */}
+        {inProgressOrders.length > 0 && (
+          <div className="bg-white shadow-xl rounded-2xl border p-4 md:p-5 border-amber-200 mb-10">
+            <h2 className="text-lg md:text-xl font-bold text-amber-800 mb-3">
+              🔧 In-Progress Orders ({inProgressOrders.length})
+            </h2>
+            {inProgressOrders.map((o) => (
+              <div key={o._id} className="border rounded-xl p-4 mb-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-amber-700 text-sm md:text-base">
+                      Order #{String(o._id).slice(-6)} —{" "}
+                      {o.user?.name || "Walk-in"}
+                    </p>
+                    <p className="text-xs md:text-sm text-gray-600">
+                      Status:{" "}
+                      <b className="capitalize">{statusOf(o.status)}</b> •
+                      &nbsp;Total: {fmtCurrency(o.totalAmount)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    {nextOrderStatus(o.status) && (
+                      <button
+                        onClick={() => advanceOrder(o)}
+                        className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-xl text-xs md:text-sm"
+                      >
+                        {humanNextLabel(o.status)}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedOrder(o)}
+                      className="w-full sm:w-auto border border-amber-200 text-amber-700 px-3 py-1 rounded-xl text-xs md:text-sm"
+                    >
+                      View
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
+
+        {/* Tables */}
+        <div className="grid grid-cols-1 gap-6 md:gap-8 mb-6">
+          <DataTableNoAction
+            title="Dine-In Reservations (Tap for Details)"
+            data={reservations}
+            columns={["Customer", "Date", "Time", "Guests"]}
+            isOrder={false}
+            onRowClick={setSelectedReservation}
+          />
+
+          <DataTableNoAction
+            title="Customer Orders (Tap for Details)"
+            data={orders}
+            columns={["Customer", "Total", "Type", "Method"]}
+            isOrder={true}
+            onRowClick={setSelectedOrder}
+          />
         </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-8">
-        <DataTableNoAction
-          title="Dine-In Reservations (Click for Details)"
-          data={reservations}
-          columns={["Customer", "Date", "Time", "Guests"]}
-          isOrder={false}
-          onRowClick={setSelectedReservation}
-        />
-
-        <DataTableNoAction
-          title="Customer Orders (Click for Details)"
-          data={orders}
-          columns={["Customer", "Total", "Type", "Method"]}
-          isOrder={true}
-          onRowClick={setSelectedOrder}
-        />
       </div>
 
+      {/* Popups */}
       {selectedOrder && (
         <OrderDetailPopup
           data={selectedOrder}
@@ -397,8 +441,12 @@ const StaffDashboard = () => {
         <ReservationDetailPopup
           data={selectedReservation}
           onClose={() => setSelectedReservation(null)}
-          onAccept={() => setReservationStatus(selectedReservation._id, "confirmed")}
-          onCancel={() => setReservationStatus(selectedReservation._id, "cancelled")}
+          onAccept={() =>
+            setReservationStatus(selectedReservation._id, "confirmed")
+          }
+          onCancel={() =>
+            setReservationStatus(selectedReservation._id, "cancelled")
+          }
         />
       )}
     </div>
@@ -413,107 +461,171 @@ const DataTableNoAction = ({ title, data, columns, isOrder, onRowClick }) => (
     transition={{ delay: 0.15 }}
     className="bg-white/90 shadow-2xl rounded-2xl border border-amber-200 overflow-hidden"
   >
-    <div className="bg-yellow-600 text-white py-4 px-6 flex justify-between items-center">
-      <h2 className="text-xl font-semibold">{title}</h2>
-      <Clock className="w-6 h-6" />
+    <div className="bg-yellow-600 text-white py-3 md:py-4 px-4 md:px-6 flex justify-between items-center">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <Clock className="w-5 h-5 md:w-6 md:h-6" />
     </div>
 
-    <table className="w-full text-center">
-      <thead className="bg-yellow-100 text-yellow-800 uppercase text-sm">
-        <tr>
-          {columns.map((c) => (
-            <th key={c} className="py-3 px-4">
-              {c}
-            </th>
-          ))}
-          <th className="py-3 px-4">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {!data?.length ? (
+    <div className="overflow-x-auto">
+      <table className="w-full text-center min-w-[600px]">
+        <thead className="bg-yellow-100 text-yellow-800 uppercase text-xs md:text-sm">
           <tr>
-            <td colSpan={columns.length + 1} className="py-6 text-gray-500">
-              No records found
-            </td>
+            {columns.map((c) => (
+              <th key={c} className="py-3 px-4">
+                {c}
+              </th>
+            ))}
+            <th className="py-3 px-4">Status</th>
           </tr>
-        ) : (
-          data.map((item, idx) => (
-            <motion.tr
-              key={item._id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.03 }}
-              className="border-b border-yellow-100 hover:bg-yellow-50 transition-all cursor-pointer"
-              onClick={() => onRowClick(item)}
-            >
-              {isOrder ? (
-                <>
-                  <td className="py-3 px-4 text-left font-semibold">
-                    {item?.user?.name || "N/A"}
-                  </td>
-                  <td className="py-3 px-4">{fmtCurrency(item?.totalAmount)}</td>
-                  <td className="py-3 px-4">{item?.type || "N/A"}</td>
-                  <td className="py-3 px-4">{item?.method || "N/A"}</td>
-                </>
-              ) : (
-                <>
-                  <td className="py-3 px-4 text-left font-semibold">
-                    {item?.user?.name || "N/A"}
-                  </td>
-                  <td className="py-3 px-4">{fmtDate(item?.date)}</td>
-                  <td className="py-3 px-4">{item?.time || "N/A"}</td>
-                  <td className="py-3 px-4">{item?.guests ?? "N/A"}</td>
-                </>
-              )}
+        </thead>
+        <tbody>
+          {!data?.length ? (
+            <tr>
               <td
-                className={`py-3 px-4 font-semibold ${
-                  ["confirmed", "completed"].includes(statusOf(item?.status))
-                    ? "text-green-600"
-                    : statusOf(item?.status) === "cancelled"
-                    ? "text-red-600"
-                    : "text-yellow-600"
-                }`}
+                colSpan={columns.length + 1}
+                className="py-6 text-gray-500 text-sm"
               >
-                {item?.status || "pending"}
+                No records found
               </td>
-            </motion.tr>
-          ))
-        )}
-      </tbody>
-    </table>
+            </tr>
+          ) : (
+            data.map((item, idx) => (
+              <motion.tr
+                key={item._id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.03 }}
+                className="border-b border-yellow-100 hover:bg-yellow-50 transition-all cursor-pointer"
+                onClick={() => onRowClick(item)}
+              >
+                {isOrder ? (
+                  <>
+                    <td className="py-3 px-4 text-left font-semibold text-sm">
+                      {item?.user?.name || "N/A"}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {fmtCurrency(item?.totalAmount)}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {item?.type || "N/A"}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {item?.method || "N/A"}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="py-3 px-4 text-left font-semibold text-sm">
+                      {item?.user?.name || "N/A"}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {fmtDate(item?.date)}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {item?.time || "N/A"}
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {item?.guests ?? "N/A"}
+                    </td>
+                  </>
+                )}
+                <td
+                  className={`py-3 px-4 font-semibold text-sm ${
+                    ["confirmed", "completed"].includes(statusOf(item?.status))
+                      ? "text-green-600"
+                      : statusOf(item?.status) === "cancelled"
+                      ? "text-red-600"
+                      : "text-yellow-600"
+                  }`}
+                >
+                  {item?.status || "pending"}
+                </td>
+              </motion.tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   </motion.div>
 );
 
 /*  Detail Popups  */
 const ReservationDetailPopup = ({ data, onClose, onAccept, onCancel }) => (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-3 sm:p-4 z-50">
     <motion.div
       initial={{ scale: 0.96, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-green-200 p-6 w-full max-w-2xl"
+      className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-green-200 p-4 sm:p-6 w-full max-w-lg sm:max-w-2xl max-h-[90vh] overflow-y-auto"
     >
       <div className="flex justify-between items-center mb-4 border-b pb-3">
-        <h2 className="text-xl font-bold text-green-700 flex items-center gap-2">
+        <h2 className="text-lg md:text-xl font-bold text-green-700 flex items-center gap-2">
           <Calendar /> Reservation #{String(data?._id).slice(-6)}
         </h2>
-        <button onClick={onClose} className="text-red-600 font-semibold">✕ Close</button>
+        <button
+          onClick={onClose}
+          className="text-red-600 font-semibold text-sm md:text-base"
+        >
+          ✕ Close
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-        <DetailRow icon={<User />} label="Customer" value={data?.user?.name || "Guest"} />
-        <DetailRow icon={<Mail />} label="Email" value={data?.user?.email || "N/A"} />
-        <DetailRow icon={<Phone />} label="Phone" value={data?.user?.phone || "N/A"} />
-        <DetailRow icon={<Utensils />} label="Status" value={data?.status || "N/A"} />
-        <DetailRow icon={<Calendar />} label="Date" value={fmtDate(data?.date)} />
-        <DetailRow icon={<Clock />} label="Time" value={data?.time || "N/A"} />
-        <DetailRow icon={<Users />} label="Guests" value={data?.guests ?? "N/A"} />
-        <DetailRow icon={<ClipboardList />} label="Special Request" value={data?.notes || "None"} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-gray-700">
+        <DetailRow
+          icon={<User />}
+          label="Customer"
+          value={data?.user?.name || "Guest"}
+        />
+        <DetailRow
+          icon={<Mail />}
+          label="Email"
+          value={data?.user?.email || "N/A"}
+        />
+        <DetailRow
+          icon={<Phone />}
+          label="Phone"
+          value={data?.user?.phone || "N/A"}
+        />
+        <DetailRow
+          icon={<Utensils />}
+          label="Status"
+          value={data?.status || "N/A"}
+        />
+        <DetailRow
+          icon={<Calendar />}
+          label="Date"
+          value={fmtDate(data?.date)}
+        />
+        <DetailRow
+          icon={<Clock />}
+          label="Time"
+          value={data?.time || "N/A"}
+        />
+        <DetailRow
+          icon={<Users />}
+          label="Guests"
+          value={data?.guests ?? "N/A"}
+        />
+        <DetailRow
+          icon={<ClipboardList />}
+          label="Special Request"
+          value={data?.notes || "None"}
+        />
       </div>
 
       {statusOf(data?.status) === "pending" && (
-        <div className="flex gap-3 mt-6">
-          <button onClick={onAccept} className="bg-green-600 text-white px-3 py-2 rounded-xl text-sm">Accept</button>
-          <button onClick={onCancel} className="bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm">Cancel</button>
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
+          <button
+            onClick={onAccept}
+            className="w-full sm:w-auto bg-green-600 text-white px-3 py-2 rounded-xl text-sm"
+          >
+            Accept
+          </button>
+          <button
+            onClick={onCancel}
+            className="w-full sm:w-auto bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm"
+          >
+            Cancel
+          </button>
         </div>
       )}
     </motion.div>
@@ -532,36 +644,66 @@ const OrderDetailPopup = ({ data, onClose, onAdvance, onCancel }) => {
   const canAdvance = Boolean(nextOrderStatus(data?.status));
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-3 sm:p-4 z-50">
       <motion.div
         initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-amber-200 p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+        className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-amber-200 p-4 sm:p-6 w-full max-w-lg sm:max-w-3xl max-height[90vh] max-h-[90vh] overflow-y-auto"
       >
         <div className="flex justify-between items-center mb-4 border-b pb-3">
-          <h2 className="text-xl font-bold text-amber-800 flex items-center gap-2">
+          <h2 className="text-lg md:text-xl font-bold text-amber-800 flex items-center gap-2">
             <ShoppingBag /> Order #{String(data?._id).slice(-6)}
           </h2>
-          <button onClick={onClose} className="text-red-600 font-semibold">✕ Close</button>
+          <button
+            onClick={onClose}
+            className="text-red-600 font-semibold text-sm md:text-base"
+          >
+            ✕ Close
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-          <DetailRow icon={<User />} label="Customer" value={data?.user?.name || "Walk-in"} />
-          <DetailRow icon={<Mail />} label="Email" value={data?.user?.email || "N/A"} />
-          <DetailRow icon={<Phone />} label="Phone" value={data?.user?.phone || "N/A"} />
-          <DetailRow icon={<Utensils />} label="Status" value={data?.status || "N/A"} />
-          <DetailRow icon={<DollarSign />} label="Total Amount" value={fmtCurrency(data?.totalAmount)} />
-          <DetailRow icon={<ShoppingBag />} label="Order Type" value={data?.type || "N/A"} />
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 text-gray-700">
+          <DetailRow
+            icon={<User />}
+            label="Customer"
+            value={data?.user?.name || "Walk-in"}
+          />
+          <DetailRow
+            icon={<Mail />}
+            label="Email"
+            value={data?.user?.email || "N/A"}
+          />
+          <DetailRow
+            icon={<Phone />}
+            label="Phone"
+            value={data?.user?.phone || "N/A"}
+          />
+          <DetailRow
+            icon={<Utensils />}
+            label="Status"
+            value={data?.status || "N/A"}
+          />
+          <DetailRow
+            icon={<DollarSign />}
+            label="Total Amount"
+            value={fmtCurrency(data?.totalAmount)}
+          />
+          <DetailRow
+            icon={<ShoppingBag />}
+            label="Order Type"
+            value={data?.type || "N/A"}
+          />
           <DetailRow
             icon={<Calendar />}
             label="Ordered At"
-            value={fmtDateTime(data?.createdAt || data?.updatedAt || data?.orderAt)}
+            value={fmtDateTime(
+              data?.createdAt || data?.updatedAt || data?.orderAt
+            )}
           />
         </div>
 
         <div className="mt-4 space-y-2 bg-yellow-50 p-4 rounded-lg shadow-inner border border-yellow-200">
-          <h3 className="text-lg font-bold text-amber-700 flex items-center gap-2">
+          <h3 className="text-base md:text-lg font-bold text-amber-700 flex items-center gap-2">
             <ClipboardList /> Items ({items.length})
           </h3>
           {items.length ? (
@@ -569,10 +711,11 @@ const OrderDetailPopup = ({ data, onClose, onAdvance, onCancel }) => {
               {items.map((it, i) => (
                 <li
                   key={i}
-                  className="flex justify-between text-sm py-1 border-b border-yellow-100 last:border-b-0"
+                  className="flex justify-between text-xs md:text-sm py-1 border-b border-yellow-100 last:border-b-0"
                 >
                   <span className="font-medium text-gray-800">
-                    {it.name} <span className="text-gray-500">x{it.quantity}</span>
+                    {it.name}{" "}
+                    <span className="text-gray-500">x{it.quantity}</span>
                   </span>
                   <span className="font-semibold text-amber-700">
                     {fmtCurrency((it.price ?? 0) * (it.quantity ?? 1))}
@@ -581,15 +724,15 @@ const OrderDetailPopup = ({ data, onClose, onAdvance, onCancel }) => {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-gray-500">No items found.</p>
+            <p className="text-xs md:text-sm text-gray-500">No items found.</p>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-6">
           {canAdvance && (
             <button
               onClick={onAdvance}
-              className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-sm"
+              className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-xl text-sm"
             >
               {nextLbl}
             </button>
@@ -598,7 +741,7 @@ const OrderDetailPopup = ({ data, onClose, onAdvance, onCancel }) => {
             statusOf(data?.status) !== "cancelled" && (
               <button
                 onClick={onCancel}
-                className="bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm"
+                className="w-full sm:w-auto bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm"
               >
                 Cancel Order
               </button>

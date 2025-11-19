@@ -25,7 +25,10 @@ const MyReservations = () => {
 
         setReservations(response.data);
       } catch (error) {
-        console.error("Failed to fetch reservations:", error.response?.data || error.message);
+        console.error(
+          "Failed to fetch reservations:",
+          error.response?.data || error.message
+        );
         toast.error("Failed to fetch your reservations");
       } finally {
         setLoading(false);
@@ -36,37 +39,44 @@ const MyReservations = () => {
   }, []);
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-amber-50 via-white to-yellow-100">
       <Navbar />
 
-      <div className="min-h-screen bg-gray-100 py-12 px-6">
-        <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl p-8">
-          <h1 className="text-4xl font-bold text-center text-amber-700 mb-10">
+      <main className="flex-1 py-8 sm:py-12 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-xl p-5 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-amber-700 mb-6 sm:mb-10">
             My Reservations
           </h1>
 
           {loading ? (
-            <p className="text-center text-gray-500">Loading your reservations...</p>
+            <p className="text-center text-gray-500 text-sm sm:text-base">
+              Loading your reservations...
+            </p>
           ) : reservations.length === 0 ? (
-            <p className="text-center text-gray-600">No reservations found.</p>
+            <p className="text-center text-gray-600 text-sm sm:text-base">
+              No reservations found.
+            </p>
           ) : (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {reservations.map((res) => (
                 <div
                   key={res._id}
-                  className="border border-gray-200 rounded-2xl shadow-md p-6 bg-gray-50 hover:shadow-lg transition"
+                  className="border border-gray-200 rounded-2xl shadow-md p-4 sm:p-6 bg-gray-50 hover:shadow-lg transition"
                 >
-                  <h2 className="text-xl font-semibold text-amber-800 mb-2">
-                    Date: {new Date(res.date).toLocaleDateString()}
+                  <h2 className="text-lg sm:text-xl font-semibold text-amber-800 mb-2">
+                    Date:{" "}
+                    {res.date
+                      ? new Date(res.date).toLocaleDateString()
+                      : "N/A"}
                   </h2>
-                  <p className="text-gray-700">
-                    <strong>Time:</strong> {res.time}
+                  <p className="text-gray-700 text-sm sm:text-base">
+                    <strong>Time:</strong> {res.time || "N/A"}
                   </p>
-                  <p className="text-gray-700">
-                    <strong>Guests:</strong> {res.partySize}
+                  <p className="text-gray-700 text-sm sm:text-base">
+                    <strong>Guests:</strong> {res.partySize ?? "N/A"}
                   </p>
                   <p
-                    className={`font-semibold mt-2 ${
+                    className={`font-semibold mt-2 text-sm sm:text-base ${
                       res.status === "confirmed"
                         ? "text-green-600"
                         : res.status === "cancelled"
@@ -81,7 +91,7 @@ const MyReservations = () => {
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>
