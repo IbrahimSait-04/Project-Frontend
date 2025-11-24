@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "../Components/Navbar";
 import Footer from "../Components/Footer";
+import api from "../../services/api";
 
 const Contact = () => {
   const [form, setForm] = useState({ name: "", email: "", description: "" });
@@ -16,31 +17,42 @@ const Contact = () => {
     setFileName(f ? f.name : "");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim()) {
       alert("Please enter your name and email.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", form.name);
-    formData.append("email", form.email);
-    formData.append("description", form.description);
-    if (file) formData.append("file", file);
+    try {
+      let screenshotUrl = "";
+      if (file) {
+        const fd = new FormData();
+        fd.append("image", file);
 
-    console.log("Submitting contact form (demo):", {
-      name: form.name,
-      email: form.email,
-      description: form.description,
-      fileName,
-    });
+        const uploadRes = await api.post("/upload/image", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        if (uploadRes.data?.success) {
+          screenshotUrl = uploadRes.data.imageUrl;
+        }
+      }
 
-    alert("Thanks! Your message was submitted (check console).");
+      await api.post("/support/contact", {
+        name: form.name,
+        email: form.email,
+        description: form.description,
+        screenshotUrl,
+      });
 
-    setForm({ name: "", email: "", description: "" });
-    setFile(null);
-    setFileName("");
+      alert("Thanks! Your message was submitted.");
+      setForm({ name: "", email: "", description: "" });
+      setFile(null);
+      setFileName("");
+    } catch (err) {
+      console.error("Error submitting contact form:", err?.response?.data || err);
+      alert("Failed to submit. Please try again.");
+    }
   };
 
   return (
@@ -49,7 +61,6 @@ const Contact = () => {
 
       <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <div className="max-w-5xl mx-auto">
-          {/* Heading */}
           <div className="text-center mb-8 sm:mb-10">
             <p className="text-sm sm:text-base uppercase tracking-[0.25em] text-amber-600 mb-2">
               Get in touch
@@ -63,9 +74,7 @@ const Contact = () => {
             </p>
           </div>
 
-          {/* Layout: info + form */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-start">
-            {/* Info column */}
             <div className="order-2 lg:order-1 bg-white/70 backdrop-blur-md rounded-2xl shadow-md border border-amber-100 p-5 sm:p-6">
               <h2 className="text-lg sm:text-xl font-semibold text-amber-800 mb-4">
                 Visit or contact Iman Café

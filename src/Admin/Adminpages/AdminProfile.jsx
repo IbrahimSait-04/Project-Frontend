@@ -30,7 +30,6 @@ const AdminProfile = () => {
         },
       });
 
-      // Here data is the admin object (based on your AdmiDashboard)
       const profileData = data;
       setAdmin(profileData);
       setFormData({

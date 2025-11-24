@@ -20,31 +20,67 @@ const CreateMenuItem = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
+  e.preventDefault();
+  try {
+    let imageUrl = "";
+
+    if (menuItem.image) {
       const fd = new FormData();
-      Object.entries(menuItem).forEach(([k, v]) => v && fd.append(k, v));
+      fd.append("image", menuItem.image);
 
-      const token = localStorage.getItem("adminToken");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const uploadRes = await api.post("/upload/image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      const res = await api.post("/menu/create", fd, { headers });
-      console.log("Menu Item Created:", res.data);
-
-      setSuccess(true);
-      setMenuItem({ name: "", description: "", price: "", category: "", image: null });
-      setTimeout(() => setSuccess(false), 2000);
-    } catch (err) {
-      console.error("Error creating menu item:", err?.response?.data || err?.message);
+      if (!uploadRes.data?.success) {
+        throw new Error("ImgBB upload failed");
+      }
+      imageUrl = uploadRes.data.imageUrl;
     }
-  };
+
+    if (!imageUrl) {
+      alert("Please select an image for this menu item.");
+      return;
+    }
+
+    const token = localStorage.getItem("adminToken");
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const payload = {
+      name: menuItem.name,
+      description: menuItem.description,
+      price: menuItem.price,
+      category: menuItem.category,
+      image: imageUrl, 
+    };
+
+    const res = await api.post("/menu/create", payload, { headers });
+    console.log("Menu Item Created:", res.data);
+
+    setSuccess(true);
+    setMenuItem({
+      name: "",
+      description: "",
+      price: "",
+      category: "",
+      image: null,
+    });
+    setTimeout(() => setSuccess(false), 2000);
+  } catch (err) {
+    console.error(
+      "Error creating menu item:",
+      err?.response?.data || err?.message
+    );
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-100 flex justify-center items-start py-10 px-4">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-100 p-8 hover:shadow-2xl transition">
 
         <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-6">
-          🍽 Create New Menu Item
+          Create New Menu Item
         </h2>
 
         {success && (

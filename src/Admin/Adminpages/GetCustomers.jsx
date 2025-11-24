@@ -27,7 +27,6 @@ const GetCustomers = () => {
 
         const raw = response.data;
 
-        // Normalize shape: support { customers: [...] } or just [...]
         const customers = Array.isArray(raw)
           ? raw
           : Array.isArray(raw?.customers)

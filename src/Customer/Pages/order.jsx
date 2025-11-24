@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-/* -------- Modal -------- */
+/* Modal  */
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -94,7 +94,7 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-/* -------- Page -------- */
+/*  Page  */
 const CustomerOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +111,6 @@ const CustomerOrders = () => {
       return;
     }
     fetchOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, navigate]);
 
   const fetchOrders = async () => {
@@ -319,7 +318,6 @@ const CustomerOrders = () => {
                     </button>
                   </div>
 
-                  {/* Extra small-screen date (stacked) */}
                   <span className="text-[11px] text-gray-500 md:hidden">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </span>

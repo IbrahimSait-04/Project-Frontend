@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../../services/api";          // ❗ use global api instance (fixes localhost issue)
+import api from "../../services/api";         
 import { toast } from "react-toastify";
 
 const GetStaffs = () => {
@@ -21,7 +21,6 @@ const GetStaffs = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const res = await api.get("/admin/staff", config);
 
-        // Normalize all possible backend shapes
         const raw = res.data;
         const staff = Array.isArray(raw)
           ? raw

@@ -9,7 +9,6 @@ const Home = () => {
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      {/* Hero Section */}
       <div className="px-4 mt-6 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold">
           Welcome to Iman Cafe
@@ -46,7 +45,6 @@ const Home = () => {
           </p>
         </div>
 
-        {/* CTA */}
         <div className="text-center mt-8 mb-10">
           <Link
             to="/Menu"

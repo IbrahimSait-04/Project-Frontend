@@ -1,4 +1,3 @@
-// src/pages/admin/Dashboard.jsx
 import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
@@ -20,18 +19,16 @@ import {
   ShoppingCart,
 } from "lucide-react";
 
-/* ----------------------------- Utils ----------------------------- */
 const statusOf = (val) => String(val || "").toLowerCase();
 const fmtDateTime = (d) => (d ? new Date(d).toLocaleString() : "N/A");
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-GB") : "N/A");
 const fmtCurrency = (n) => `₹${Number(n ?? 0).toFixed(2)}`;
 
-// Order status pipeline
 const nextOrderStatus = (st) => {
   const s = statusOf(st);
   if (s === "pending") return "accepted";
   if (s === "accepted") return "preparing";
-  if (s === "preparing") return "completed"; // completed = handed to customer
+  if (s === "preparing") return "completed";
   return null;
 };
 
@@ -43,7 +40,6 @@ const humanNextLabel = (st) => {
   return null;
 };
 
-/* ----------------------- Reusable UI bits ------------------------ */
 const DashboardCard = ({ icon, title, count, borderColor }) => (
   <motion.div
     whileHover={{ scale: 1.03 }}
@@ -69,7 +65,7 @@ const DetailRow = ({ icon, label, value }) => (
   </div>
 );
 
-/* -------------------------- Main Dashboard -------------------------- */
+/*  Main Dashboard  */
 const Dashboard = () => {
   const [reservations, setReservations] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -78,7 +74,6 @@ const Dashboard = () => {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Derived groups
   const pendingReservations = useMemo(
     () => reservations.filter((r) => statusOf(r.status) === "pending"),
     [reservations]
@@ -121,7 +116,6 @@ const Dashboard = () => {
     return { dailyRevenue: daily, monthlyRevenue: monthly };
   }, [orders]);
 
-  // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -165,7 +159,6 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  /* ------------ Status update helpers (with token safety) ------------ */
 
   const setReservationStatus = async (id, status) => {
     const token = localStorage.getItem("adminToken");
@@ -225,7 +218,6 @@ const Dashboard = () => {
     setOrderStatus(order._id, nxt);
   };
 
-  /* ------------------- Loading / Empty Guard ------------------- */
 
   if (loading) {
     return (
@@ -244,7 +236,6 @@ const Dashboard = () => {
     pendingReservations: pendingReservations.length,
   };
 
-  /* --------------------------- UI --------------------------- */
 
   return (
     <div className="min-h-screen bg-amber-50 p-6">
@@ -252,7 +243,6 @@ const Dashboard = () => {
         <LayoutDashboard size={28} /> Admin Dashboard
       </h1>
 
-      {/* KPI Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
         <DashboardCard
           icon={<ShoppingCart className="text-yellow-600 w-10 h-10" />}
@@ -292,7 +282,6 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Pending Sections */}
       <div className="grid md:grid-cols-2 gap-6 mb-10">
         {/* Pending Orders */}
         <div className="bg-white shadow-xl rounded-2xl border p-5 border-amber-200">
@@ -449,7 +438,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* All Tables (click rows for details) */}
       <div className="grid grid-cols-1 gap-8">
         <DataTableNoAction
           title="Dine-In Reservations (Click for Details)"
@@ -493,7 +481,7 @@ const Dashboard = () => {
   );
 };
 
-/* -------------------- Tables (read-only rows) -------------------- */
+/* Tables  */
 const DataTableNoAction = ({ title, data, columns, isOrder, onRowClick }) => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -576,7 +564,7 @@ const DataTableNoAction = ({ title, data, columns, isOrder, onRowClick }) => (
   </motion.div>
 );
 
-/* --------------------------- Detail Popups --------------------------- */
+/*  Detail Popups  */
 const ReservationDetailPopup = ({ data, onClose, onAccept, onCancel }) => (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
     <motion.div

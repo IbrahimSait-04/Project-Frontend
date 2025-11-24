@@ -20,7 +20,7 @@ const CreateStaffs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const adminToken = localStorage.getItem("adminToken"); // read at submit time
+    const adminToken = localStorage.getItem("adminToken"); 
 
     if (!adminToken) {
       toast.error("Admin not logged in!");
