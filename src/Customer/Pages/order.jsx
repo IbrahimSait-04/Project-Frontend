@@ -10,6 +10,7 @@ import {
   Info,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../Components/Navbar";
 
 /* Modal  */
 const OrderDetailModal = ({ order, onClose }) => {
@@ -128,7 +129,11 @@ const CustomerOrders = () => {
     }
   };
 
-  const CURRENT_STATUSES = useMemo(() => ["pending", "confirmed"], []);
+  // Current vs past statuses
+  const CURRENT_STATUSES = useMemo(
+    () => ["pending", "confirmed", "accepted", "preparing"],
+    []
+  );
   const PAST_STATUSES = useMemo(() => ["completed", "cancelled"], []);
 
   const isPastOrder = (order) => {
@@ -136,13 +141,9 @@ const CustomerOrders = () => {
     return PAST_STATUSES.includes(status);
   };
 
+  // 🔥 Now allow details for all orders (current + past)
   const handleViewDetails = (order) => {
-    if (isPastOrder(order)) {
-      toast.info("Order details are restricted for past transactions.");
-      setSelectedOrder(null);
-    } else {
-      setSelectedOrder(order);
-    }
+    setSelectedOrder(order);
   };
 
   const getStatusStyles = (status) => {
@@ -151,7 +152,10 @@ const CustomerOrders = () => {
       case "pending":
         return "text-yellow-700 bg-yellow-100 border border-yellow-300";
       case "confirmed":
+      case "accepted":
         return "text-blue-700 bg-blue-100 border border-blue-300";
+      case "preparing":
+        return "text-orange-700 bg-orange-100 border border-orange-300";
       case "completed":
         return "text-green-700 bg-green-100 border border-green-300";
       case "cancelled":
@@ -167,7 +171,10 @@ const CustomerOrders = () => {
       case "pending":
         return <Clock size={16} className="text-yellow-600" />;
       case "confirmed":
+      case "accepted":
         return <Package size={16} className="text-blue-600" />;
+      case "preparing":
+        return <Clock size={16} className="text-orange-600" />;
       case "completed":
         return <CheckCircle size={16} className="text-green-600" />;
       case "cancelled":
@@ -262,72 +269,64 @@ const CustomerOrders = () => {
 
           {/* Orders list */}
           {!loading &&
-            filteredOrders.map((order) => {
-              const isPast = isPastOrder(order);
+            filteredOrders.map((order) => (
+              <div
+                key={order._id}
+                className="mt-2 bg-white hover:bg-amber-50 rounded-lg shadow-sm border border-gray-100 transition duration-150 p-3 sm:p-4 flex flex-col gap-2 md:grid md:grid-cols-6 md:items-center"
+              >
+                {/* ID */}
+                <span className="truncate font-medium text-xs sm:text-sm">
+                  #{order._id.slice(-6)}
+                </span>
 
-              return (
-                <div
-                  key={order._id}
-                  className="mt-2 bg-white hover:bg-amber-50 rounded-lg shadow-sm border border-gray-100 transition duration-150 p-3 sm:p-4 flex flex-col gap-2 md:grid md:grid-cols-6 md:items-center"
+                {/* Date (hidden on very small screens) */}
+                <span className="text-xs sm:text-sm text-gray-600 hidden md:inline">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </span>
+
+                {/* Items */}
+                <span className="text-xs sm:text-sm text-gray-700">
+                  {order.items?.length || 0} items
+                </span>
+
+                {/* Total */}
+                <span className="font-bold text-green-700 text-xs sm:text-sm">
+                  ₹{order.totalAmount?.toFixed(2) || "0.00"}
+                </span>
+
+                {/* Status */}
+                <span
+                  className={`flex items-center gap-1 justify-start md:justify-center text-[11px] sm:text-xs md:text-sm px-3 py-1 rounded-full font-medium w-fit md:w-auto ${getStatusStyles(
+                    order.status
+                  )}`}
                 >
-                  {/* ID */}
-                  <span className="truncate font-medium text-xs sm:text-sm">
-                    #{order._id.slice(-6)}
-                  </span>
+                  {getStatusIcon(order.status)}
+                  {formattedStatus(order.status)}
+                </span>
 
-                  {/* Date (hidden on very small screens) */}
-                  <span className="text-xs sm:text-sm text-gray-600 hidden md:inline">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </span>
-
-                  {/* Items */}
-                  <span className="text-xs sm:text-sm text-gray-700">
-                    {order.items?.length || 0} items
-                  </span>
-
-                  {/* Total */}
-                  <span className="font-bold text-green-700 text-xs sm:text-sm">
-                    ₹{order.totalAmount?.toFixed(2) || "0.00"}
-                  </span>
-
-                  {/* Status */}
-                  <span
-                    className={`flex items-center gap-1 justify-start md:justify-center text-[11px] sm:text-xs md:text-sm px-3 py-1 rounded-full font-medium w-fit md:w-auto ${getStatusStyles(
-                      order.status
+                {/* Details button – now always enabled */}
+                <div className="flex md:justify-center">
+                  <button
+                    onClick={() => handleViewDetails(order)}
+                    className="flex justify-center items-center text-orange-500 hover:text-orange-700 transition"
+                    aria-label={`View details for order ${order._id.slice(
+                      -6
                     )}`}
                   >
-                    {getStatusIcon(order.status)}
-                    {formattedStatus(order.status)}
-                  </span>
-
-                  {/* Details button */}
-                  <div className="flex md:justify-center">
-                    <button
-                      onClick={() => handleViewDetails(order)}
-                      className={`flex justify-center items-center transition ${
-                        isPast
-                          ? "text-gray-400 cursor-not-allowed"
-                          : "text-orange-500 hover:text-orange-700"
-                      }`}
-                      disabled={isPast}
-                      aria-label={`View details for order ${order._id.slice(
-                        -6
-                      )}`}
-                    >
-                      <Info size={18} />
-                    </button>
-                  </div>
-
-                  <span className="text-[11px] text-gray-500 md:hidden">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </span>
+                    <Info size={18} />
+                  </button>
                 </div>
-              );
-            })}
+
+                <span className="text-[11px] text-gray-500 md:hidden">
+                  {new Date(order.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
         </div>
       </div>
 
-      {selectedOrder && !isPastOrder(selectedOrder) && (
+      {/* 🔥 Show modal for ALL selected orders (current or past) */}
+      {selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { FaUserAlt, FaSignOutAlt } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 
 const CustomerProfile = () => {
@@ -35,10 +35,7 @@ const CustomerProfile = () => {
           localStorage.setItem("customerData", JSON.stringify(data.customer));
         }
       } catch (err) {
-        console.warn(
-          "Error fetching customer:",
-          err?.response?.data || err.message
-        );
+        console.warn("Error fetching customer:", err?.response?.data || err.message);
         if (customerId !== "undefined") toast.warn("Using cached data.");
       }
 
@@ -96,6 +93,7 @@ const CustomerProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-yellow-100">
+      
       {/* Header / Profile bar */}
       <div className="bg-white/90 shadow-sm border-b border-amber-100 py-6 sm:py-8 px-4 sm:px-8 md:px-16 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -112,13 +110,23 @@ const CustomerProfile = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="mt-2 md:mt-0 px-4 sm:px-5 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition flex items-center gap-2 text-sm sm:text-base font-medium"
-        >
-          <FaSignOutAlt />
-          Logout
-        </button>
+        {/* Buttons RIGHT side */}
+        <div className="flex items-center gap-3">
+          <Link
+            to="/"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
+          >
+            Back To Home
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            className="px-4 sm:px-5 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition flex items-center gap-2 text-sm sm:text-base font-medium"
+          >
+            <FaSignOutAlt />
+            Logout
+          </button>
+        </div>
       </div>
 
       {/* Main content */}
