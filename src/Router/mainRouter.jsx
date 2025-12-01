@@ -7,7 +7,6 @@ import MenuCard from '../Customer/Pages/MenuCard'
 import Contact from '../Customer/Pages/Contact'
 
 // Admin Imports
-// Renamed AdminHome to AdmiDashboard as per your file structure
 import AdmiDashboard from '../Admin/Adminpages/Admin'
 import Dashboard from '../Admin/Adminpages/Dashboard'
 import CreateMenuItem from '../Admin/Adminpages/CreateMenu'
@@ -38,7 +37,7 @@ const MainRouter = () => {
         return (
                 <div>
                         <Routes>
-                                {/* --- COMMON & CUSTOMER ROUTES --- */}
+                                {/*  COMMON & CUSTOMER ROUTES  */}
                                 <Route path='/' element={<Home />} />
                                 <Route path='/Signup' element={<SignUp />} />
                                 <Route path='/Login' element={<Login />} />
@@ -48,7 +47,7 @@ const MainRouter = () => {
                                 <Route path='/cart' element={<Cart />} />
                                 <Route path='/checkout' element={<Checkout />} />
 
-                                {/* Customer Account Routes */}
+                                {/* CUSTOMER ACCOUNT ROUTES */}
                                 <Route path='/customer/profile' element={<CustomerProfile />} />
                                 <Route path='/customer/settings' element={<CustomerSettings />} />
                                 <Route path='/customer/reservations' element={<MyReservations />} />
@@ -56,7 +55,7 @@ const MainRouter = () => {
                                 <Route path='/myorders' element={<CustomerOrders />} />
 
 
-                                {/* --- STAFF ROUTES (NESTED STRUCTURE) --- */}
+                                {/*  STAFF ROUTES (NESTED STRUCTURE)  */}
                                 <Route path="/staff" element={<StaffHome />}>
                                         <Route index element={<StaffDashboard />} />
                                         {/* child routes */}
@@ -66,7 +65,7 @@ const MainRouter = () => {
                                         <Route path="*" element={<StaffDashboard />} />
                                 </Route>
 
-                                {/* --- ADMIN ROUTES (NESTED STRUCTURE) --- */}
+                                {/*  ADMIN ROUTES (NESTED STRUCTURE) */}
 
                                 <Route path='/admin' element={<AdmiDashboard />}>
                                         <Route index element={<Dashboard />} />

@@ -86,7 +86,7 @@ const DineInReservation = () => {
               'url("https://www.thedailymeal.com/img/gallery/the-menu-rule-youre-supposed-to-follow-at-fine-dining-restaurants/l-intro-1670362698.jpg")',
           }}
         >
-          {/* Dark overlay */}
+          
           <div className="absolute inset-0 bg-black/60"></div>
 
           <div className="relative z-10 w-full max-w-3xl text-center">

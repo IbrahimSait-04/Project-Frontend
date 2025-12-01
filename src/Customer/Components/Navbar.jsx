@@ -22,7 +22,9 @@ const Navbar = () => {
   return (
     <nav className="w-full bg-white border-b-4 border-amber-400 shadow-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+
         {/* Logo + Brand */}
+
         <div className="flex items-center gap-3">
           <img
             src={cafeLogo}
@@ -70,7 +72,7 @@ const Navbar = () => {
           </Link>
         </ul>
 
-        {/* Mobile Hamburger */}
+        {/* Mobile  */}
         <button
           className="md:hidden flex flex-col justify-center gap-1.5 p-2 rounded-md border border-amber-200 text-amber-700 active:scale-95 transition"
           onClick={toggleMenu}

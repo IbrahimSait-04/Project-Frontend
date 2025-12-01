@@ -3,33 +3,26 @@ import api from "../../services/api.js";
 import { toast } from "react-toastify";
 import { Loader2, Edit3, Save, XCircle, X } from "lucide-react";
 
-// Same base as in api.js: VITE_API_URL for local/prod, fallback to Render URL
 const SERVER_BASE_URL =
   import.meta.env.VITE_API_URL || "https://project-backend-qqbo.onrender.com";
 
-// Local fallback image (put a small PNG/SVG in /public/no-image.png)
 const FALLBACK_IMAGE = "/no-image.png";
 
 const EditMenu = () => {
-  // Build a usable URL from whatever is stored in DB
   const getAbsoluteImageUrl = (imagePath) => {
     if (!imagePath) {
       return FALLBACK_IMAGE;
     }
 
-    // New style: full URL (ImgBB or any other)
     if (imagePath.startsWith("http")) return imagePath;
 
-    // Old style: only filename like "1759930804640-tendorshake.jpg"
-    // or "uploads/1759....jpg"
+
     let normalized = imagePath;
 
-    // remove leading slash
     if (normalized.startsWith("/")) {
       normalized = normalized.slice(1);
     }
 
-    // ensure "uploads/" in front
     if (!normalized.startsWith("uploads/")) {
       normalized = `uploads/${normalized}`;
     }

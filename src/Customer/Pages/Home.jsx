@@ -55,22 +55,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Reviews */}
-      <section className="max-w-4xl mx-auto px-4 mb-14">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-          <h2 className="text-2xl font-semibold mb-4 text-center">
-            Customer Reviews
-          </h2>
-          <div className="space-y-4">
-            <div className="border-b pb-4">
-              <p className="text-gray-700 text-sm sm:text-base">
-                <strong>John Doe:</strong> "The ambiance is amazing and the
-                coffee is the best I've ever had!"
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <Footer />
     </div>

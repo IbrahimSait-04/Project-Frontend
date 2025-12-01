@@ -129,7 +129,6 @@ const CustomerOrders = () => {
     }
   };
 
-  // Current vs past statuses
   const CURRENT_STATUSES = useMemo(
     () => ["pending", "confirmed", "accepted", "preparing"],
     []
@@ -141,7 +140,6 @@ const CustomerOrders = () => {
     return PAST_STATUSES.includes(status);
   };
 
-  // 🔥 Now allow details for all orders (current + past)
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
   };
@@ -325,7 +323,6 @@ const CustomerOrders = () => {
         </div>
       </div>
 
-      {/* 🔥 Show modal for ALL selected orders (current or past) */}
       {selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}

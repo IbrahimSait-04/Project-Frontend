@@ -26,7 +26,6 @@ const CustomerSettings = () => {
 
   const handleUpdate = async (field) => {
     try {
-      // use correct customer token key
       const token = localStorage.getItem("customerToken");
       if (!token) throw new Error("No token found");
 
